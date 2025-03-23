@@ -1,17 +1,20 @@
 // Dashboard 
 // /Users/matthewsimon/Documents/Github/solo-heatMaps/soloist/src/app/dashboard/page.tsx
 
+// /src/app/dashboard/page.tsx
 "use client";
 
 import React from "react";
+import Sidebar from "./_components/Sidebar";
+import { Canvas, Space } from "./_components";
 
 export default function DashboardPage() {
-
   return (
-    <div className="flex flex-col w-screen h-screen overflow-hidden pt-9 draggable bg-[#1b1b1b]">
-      <div className="flex flex-1 overflow-hidden no-drag">
-        Welcome
-      </div>
+    // Remove any extra wrappers that might be affecting the sidebar
+    <div className="flex w-screen h-screen overflow-hidden">
+      <Sidebar />
+      <Canvas />
+      <Space />
     </div>
   );
 }
