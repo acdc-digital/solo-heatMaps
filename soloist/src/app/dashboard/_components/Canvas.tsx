@@ -1,3 +1,6 @@
+// CANVAS
+// /Users/matthewsimon/Documents/Github/solo-heatMaps/soloist/src/app/dashboard/_components/Canvas.tsx
+
 import React from "react";
 
 const Canvas = () => {

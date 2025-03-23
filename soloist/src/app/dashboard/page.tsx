@@ -1,7 +1,6 @@
 // Dashboard 
 // /Users/matthewsimon/Documents/Github/solo-heatMaps/soloist/src/app/dashboard/page.tsx
 
-// /src/app/dashboard/page.tsx
 "use client";
 
 import React from "react";
