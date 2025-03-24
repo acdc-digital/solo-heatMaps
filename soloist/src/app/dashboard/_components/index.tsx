@@ -1,9 +1,9 @@
 import Sidebar from "./Sidebar";
 import Canvas from "./Canvas";
-import Space from "./Space";
+import Feed from "./Feed";
 
 export {
   Sidebar,
   Canvas,
-  Space
+  Feed
 };

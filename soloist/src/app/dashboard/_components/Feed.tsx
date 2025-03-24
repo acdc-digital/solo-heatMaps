@@ -1,4 +1,4 @@
-// SPACE
+// FEED
 // /Users/matthewsimon/Documents/Github/solo-heatMaps/soloist/src/app/dashboard/_components/Space.tsx
 
 "use client";
@@ -8,8 +8,8 @@ import { useSidebarStore } from "@/store/useSidebarStore";
 import DailyLogForm from "@/components/dailyLogForm";
 import { Info } from "lucide-react";
 
-const Space = () => {
-  const { sidebarMode, setSidebarMode } = useSidebarStore();
+const Feed = () => {
+  const { sidebarMode, setSidebarMode, selectedDate } = useSidebarStore();
 
   const handleCloseForm = () => setSidebarMode("default");
 
@@ -17,13 +17,17 @@ const Space = () => {
     <div className="w-64 h-full bg-zinc-900 border-l border-zinc-800 flex flex-col">
       {sidebarMode === "logForm" ? (
         <>
-          {/* Optional: top heading */}
           <div className="p-4 border-b border-zinc-800">
-            <h2 className="text-lg font-semibold text-zinc-100">New Log</h2>
-            <p className="text-xs text-zinc-400">Create a new daily log</p>
+            <h2 className="text-lg font-semibold text-zinc-100">
+              {selectedDate ? "Daily Log" : "New Log"}
+            </h2>
+            <p className="text-xs text-zinc-400">
+              {selectedDate ? `Date: ${selectedDate}` : "Create a new daily log"}
+            </p>
           </div>
           <div className="flex-1 p-4 overflow-auto">
-            <DailyLogForm onClose={handleCloseForm} />
+            {/* Pass in the selectedDate! */}
+            <DailyLogForm onClose={handleCloseForm} date={selectedDate ?? undefined} />
           </div>
         </>
       ) : (
@@ -46,4 +50,4 @@ const Space = () => {
   );
 };
 
-export default Space;
+export default Feed;

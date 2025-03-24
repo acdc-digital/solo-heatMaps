@@ -3,19 +3,19 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns"; // <--- parseISO imported here
 import { useUser } from "@/hooks/useUser";
 
-// Define the structure for our form data.
+// Define the structure for our form data
 interface DailyLogFormData {
   mood: number;
   sleep: number;
@@ -32,14 +32,31 @@ interface DailyLogFormData {
 
 interface DailyLogFormProps {
   onClose: () => void;
+  date?: string; // If not provided, use today's date.
 }
 
-const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
-  const { user } = useUser();
+export default function DailyLogForm({ onClose, date }: DailyLogFormProps) {
+  // 1) Determine the date for this form
+  // If `date` was passed in, use that. Otherwise use today's date.
+  const effectiveDate = date ?? new Date().toISOString().split("T")[0];
+
+  // 2) Get the current user
+  const { user, isSignedIn } = useUser();
+
+  // 3) Fetch existing daily log, if any, for (userId, effectiveDate).
+  const existingLog = useQuery(api.dailyLogs.getDailyLog, {
+    userId: user ? user._id : "",
+    date: effectiveDate,
+  });
+
+  // 4) Prepare the upsert mutation
   const dailyLogMutation = useMutation(api.dailyLogs.dailyLog);
+
+  // 5) Submission/error states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 6) Setup React Hook Form
   const {
     register,
     handleSubmit,
@@ -62,25 +79,42 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
     },
   });
 
-  // Watch exercise and meditation to conditionally show their durations.
+  // 7) If there's an existing log, pre-fill the form
+  useEffect(() => {
+    if (existingLog) {
+      reset({
+        mood: existingLog.answers?.mood ?? 5,
+        sleep: existingLog.answers?.sleep ?? 7,
+        exercise: existingLog.answers?.exercise ?? false,
+        exerciseMinutes: existingLog.answers?.exerciseMinutes ?? 0,
+        meditation: existingLog.answers?.meditation ?? false,
+        meditationMinutes: existingLog.answers?.meditationMinutes ?? 0,
+        waterIntake: existingLog.answers?.waterIntake ?? 4,
+        highlights: existingLog.answers?.highlights ?? "",
+        challenges: existingLog.answers?.challenges ?? "",
+        gratitude: existingLog.answers?.gratitude ?? "",
+        goals: existingLog.answers?.goals ?? "",
+      });
+    }
+  }, [existingLog, reset]);
+
+  // 8) Conditionally show exercise/meditation fields
   const didExercise = watch("exercise");
   const didMeditate = watch("meditation");
 
-  const today = format(new Date(), "yyyy-MM-dd");
-
+  // 9) Submit handler (create or update daily log)
   const onSubmit = async (data: DailyLogFormData) => {
-    if (!user) {
+    if (!isSignedIn) {
       setError("You must be logged in to submit a log");
       return;
     }
-
     setIsSubmitting(true);
     setError(null);
 
     try {
       await dailyLogMutation({
-        userId: user.userId,
-        date: today,
+        userId: user._id,
+        date: effectiveDate,
         answers: { ...data },
         score: undefined,
       });
@@ -93,14 +127,19 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
     }
   };
 
+  // 10) Format the date properly without time zone shifting
+  const parsedDate = parseISO(effectiveDate);
+  // parseISO("2025-01-02") → a Date object for local Jan 2
+  const formattedDisplayDate = format(parsedDate, "MMMM d, yyyy");
+
   return (
-    <div className="flex flex-col space-y-4">
+    <div className="flex flex-col space-y-4 text-zinc-50">
       <div>
-        <h2 className="text-lg font-semibold text-zinc-100">
-          Daily Log for {format(new Date(), "MMMM d, yyyy")}
+        <h2 className="text-lg font-semibold">
+          {existingLog ? "Edit Log" : "Log"} for {formattedDisplayDate}
         </h2>
         <p className="text-sm text-zinc-400">
-          Answer the questions below to log your day. Your responses will be used
+          Fill in the details below to log your day. Your responses will be used
           to calculate your daily score.
         </p>
       </div>
@@ -108,9 +147,11 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Mood Tracker */}
         <div className="space-y-2">
-          <Label htmlFor="mood">Rate your mood (1-10)</Label>
+          <Label htmlFor="mood" className="text-zinc-50">
+            Rate your mood (1-10)
+          </Label>
           <div className="flex items-center space-x-2">
-            <span className="text-zinc-400">1</span>
+            <span className="text-zinc-50">1</span>
             <Input
               id="mood"
               type="range"
@@ -120,18 +161,21 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
               className="flex-1"
               {...register("mood", { required: true })}
             />
-            <span className="text-zinc-400">10</span>
+            <span className="text-zinc-50">10</span>
             <span className="w-8 text-center">{watch("mood")}</span>
           </div>
         </div>
 
         {/* Sleep */}
         <div className="space-y-2">
-          <Label htmlFor="sleep">Hours of Sleep</Label>
+          <Label htmlFor="sleep" className="text-zinc-50">
+            Hours of Sleep
+          </Label>
           <Input
             id="sleep"
             type="number"
-            className="bg-zinc-800 border-zinc-700"
+            className="bg-zinc-800 border-zinc-700 placeholder:text-zinc-400"
+            placeholder="7"
             {...register("sleep", { required: true, min: 0, max: 24 })}
           />
           {errors.sleep && (
@@ -150,17 +194,25 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
               className="rounded bg-zinc-800 border-zinc-700"
               {...register("exercise")}
             />
-            <Label htmlFor="exercise">Did you exercise today?</Label>
+            <Label htmlFor="exercise" className="text-zinc-50">
+              Did you exercise today?
+            </Label>
           </div>
           {didExercise && (
             <div className="ml-6 space-y-2">
-              <Label htmlFor="exerciseMinutes">For how many minutes?</Label>
+              <Label htmlFor="exerciseMinutes" className="text-zinc-50">
+                For how many minutes?
+              </Label>
               <Input
                 id="exerciseMinutes"
                 type="number"
-                className="bg-zinc-800 border-zinc-700"
+                className="bg-zinc-800 border-zinc-700 placeholder:text-zinc-400"
+                placeholder="0"
                 {...register("exerciseMinutes", { required: didExercise, min: 1 })}
               />
+              {errors.exerciseMinutes && (
+                <p className="text-xs text-red-500">Please enter a valid duration</p>
+              )}
             </div>
           )}
         </div>
@@ -174,38 +226,51 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
               className="rounded bg-zinc-800 border-zinc-700"
               {...register("meditation")}
             />
-            <Label htmlFor="meditation">Did you meditate today?</Label>
+            <Label htmlFor="meditation" className="text-zinc-50">
+              Did you meditate today?
+            </Label>
           </div>
           {didMeditate && (
             <div className="ml-6 space-y-2">
-              <Label htmlFor="meditationMinutes">For how many minutes?</Label>
+              <Label htmlFor="meditationMinutes" className="text-zinc-50">
+                For how many minutes?
+              </Label>
               <Input
                 id="meditationMinutes"
                 type="number"
-                className="bg-zinc-800 border-zinc-700"
+                className="bg-zinc-800 border-zinc-700 placeholder:text-zinc-400"
+                placeholder="0"
                 {...register("meditationMinutes", { required: didMeditate, min: 1 })}
               />
+              {errors.meditationMinutes && (
+                <p className="text-xs text-red-500">Please enter a valid duration</p>
+              )}
             </div>
           )}
         </div>
 
         {/* Water Intake */}
         <div className="space-y-2">
-          <Label htmlFor="waterIntake">Glasses of water</Label>
+          <Label htmlFor="waterIntake" className="text-zinc-50">
+            Glasses of water
+          </Label>
           <Input
             id="waterIntake"
             type="number"
-            className="bg-zinc-800 border-zinc-700"
+            className="bg-zinc-800 border-zinc-700 placeholder:text-zinc-400"
+            placeholder="4"
             {...register("waterIntake", { required: true, min: 0 })}
           />
         </div>
 
         {/* Highlights */}
         <div className="space-y-2">
-          <Label htmlFor="highlights">Highlights of your day</Label>
+          <Label htmlFor="highlights" className="text-zinc-50">
+            Highlights of your day
+          </Label>
           <Textarea
             id="highlights"
-            className="bg-zinc-800 border-zinc-700 min-h-[80px]"
+            className="bg-zinc-800 border-zinc-700 min-h-[80px] placeholder:text-zinc-400"
             placeholder="The best moments of my day were..."
             {...register("highlights")}
           />
@@ -213,10 +278,12 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
 
         {/* Challenges */}
         <div className="space-y-2">
-          <Label htmlFor="challenges">Challenges you faced</Label>
+          <Label htmlFor="challenges" className="text-zinc-50">
+            Challenges you faced
+          </Label>
           <Textarea
             id="challenges"
-            className="bg-zinc-800 border-zinc-700 min-h-[80px]"
+            className="bg-zinc-800 border-zinc-700 min-h-[80px] placeholder:text-zinc-400"
             placeholder="I struggled with..."
             {...register("challenges")}
           />
@@ -224,10 +291,12 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
 
         {/* Gratitude */}
         <div className="space-y-2">
-          <Label htmlFor="gratitude">What are you grateful for?</Label>
+          <Label htmlFor="gratitude" className="text-zinc-50">
+            What are you grateful for?
+          </Label>
           <Textarea
             id="gratitude"
-            className="bg-zinc-800 border-zinc-700 min-h-[80px]"
+            className="bg-zinc-800 border-zinc-700 min-h-[80px] placeholder:text-zinc-400"
             placeholder="I'm grateful for..."
             {...register("gratitude")}
           />
@@ -235,10 +304,12 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
 
         {/* Goals */}
         <div className="space-y-2">
-          <Label htmlFor="goals">Goals for tomorrow</Label>
+          <Label htmlFor="goals" className="text-zinc-50">
+            Goals for tomorrow
+          </Label>
           <Textarea
             id="goals"
-            className="bg-zinc-800 border-zinc-700 min-h-[80px]"
+            className="bg-zinc-800 border-zinc-700 min-h-[80px] placeholder:text-zinc-400"
             placeholder="Tomorrow I will..."
             {...register("goals")}
           />
@@ -280,6 +351,4 @@ const DailyLogForm: React.FC<DailyLogFormProps> = ({ onClose }) => {
       </form>
     </div>
   );
-};
-
-export default DailyLogForm;
+}

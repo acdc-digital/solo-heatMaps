@@ -1,4 +1,6 @@
-// convex/users.ts
+// USERS
+// /Users/matthewsimon/Documents/Github/solo-heatMaps/soloist/convex/users.ts
+
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
@@ -55,9 +57,6 @@ export const upsertUser = mutation({
 
       await db.patch(existingUser._id, patchPayload); // Patch with explicit payload
 
-      // Add a small delay after patching (for potential indexing lag - try 500ms)
-      await new Promise(resolve => setTimeout(resolve, 500)); // Add 500ms delay
-
       const updatedUser = await db.get(existingUser._id); // Re-fetch user after patch and delay
       console.log("Updated user after patch and delay:", updatedUser); // Log re-fetched user
       return updatedUser;
@@ -80,9 +79,6 @@ export const upsertUser = mutation({
       console.log("Inserting new user:", newUser); // Log new user payload before insert
 
       const newUserId: Id<"users"> = await db.insert("users", newUser);
-
-      // Add a small delay after inserting (for potential indexing lag - try 500ms)
-      await new Promise(resolve => setTimeout(resolve, 500)); // Add 500ms delay
 
       const insertedUser = await db.get(newUserId); // Re-fetch user after insert and delay
       console.log("Inserted user after insert and delay:", insertedUser); // Log re-fetched user

@@ -5,7 +5,7 @@
 
 import React from "react";
 import Sidebar from "./_components/Sidebar";
-import { Canvas, Space } from "./_components";
+import { Canvas, Feed } from "./_components";
 
 export default function DashboardPage() {
   return (
@@ -13,7 +13,7 @@ export default function DashboardPage() {
     <div className="flex w-screen h-screen overflow-hidden">
       <Sidebar />
       <Canvas />
-      <Space />
+      <Feed />
     </div>
   );
 }

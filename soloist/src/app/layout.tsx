@@ -1,3 +1,6 @@
+// APP LAYOUT
+// /Users/matthewsimon/Documents/Github/solo-heatMaps/soloist/src/app/layout.tsx
+
 import type { Metadata } from "next";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import "./globals.css";

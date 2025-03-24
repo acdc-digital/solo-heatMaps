@@ -26,7 +26,7 @@ const schema = defineSchema({
     date: v.string(),
     // Store answers as an object.
     // You could be more specific if you have fixed questions.
-    answers: v.object({}),
+    answers: v.any(),
     // A computed daily score, e.g. 0-100.
     score: v.optional(v.number()),
     // Timestamps to track log creation and updates.

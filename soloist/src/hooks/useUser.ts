@@ -1,4 +1,6 @@
-// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/hooks/useUser.ts
+// USER USER
+// /Users/matthewsimon/Documents/Github/solo-heatMaps/soloist/src/hooks/useUser.ts
+
 import { useAuthToken } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { useMutation } from "convex/react";
