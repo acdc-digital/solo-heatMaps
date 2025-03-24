@@ -32,7 +32,14 @@ const schema = defineSchema({
     // Timestamps to track log creation and updates.
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("userId", ["userId"])
+  }).index("userId", ["userId"]),
+
+  feed: defineTable({
+    userId: v.string(),
+    date: v.string(),
+    message: v.string(),
+    createdAt: v.number(),
+  }),
   
   // other tables...
 });

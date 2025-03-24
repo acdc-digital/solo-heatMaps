@@ -52,6 +52,8 @@ export default function DailyLogForm({ onClose, date }: DailyLogFormProps) {
 
   // 4) Prepare the upsert mutation
   const dailyLogMutation = useMutation(api.dailyLogs.dailyLog);
+  // The action that calls OpenAI and inserts into `feed` table
+  const generateFeedForDailyLog = useAction(api.feed.generateFeedForDailyLog);
 
   // 5) Submission/error states
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -124,6 +126,11 @@ export default function DailyLogForm({ onClose, date }: DailyLogFormProps) {
         userId: user._id,         // Must match what your logs table uses
         date: effectiveDate,      // The same date you just saved
         });
+
+        await generateFeedForDailyLog({
+          userId: user._id.toString(),
+          date: effectiveDate,
+          });
 
       reset();
       onClose();
