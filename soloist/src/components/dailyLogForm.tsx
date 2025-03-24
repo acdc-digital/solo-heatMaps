@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ interface DailyLogFormProps {
 }
 
 export default function DailyLogForm({ onClose, date }: DailyLogFormProps) {
+  const scoreDailyLogAction = useAction(api.score.scoreDailyLog);
   // 1) Determine the date for this form
   // If `date` was passed in, use that. Otherwise use today's date.
   const effectiveDate = date ?? new Date().toISOString().split("T")[0];
@@ -118,6 +119,12 @@ export default function DailyLogForm({ onClose, date }: DailyLogFormProps) {
         answers: { ...data },
         score: undefined,
       });
+
+      await scoreDailyLogAction({
+        userId: user._id,         // Must match what your logs table uses
+        date: effectiveDate,      // The same date you just saved
+        });
+
       reset();
       onClose();
     } catch (err) {

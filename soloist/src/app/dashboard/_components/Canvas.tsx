@@ -33,7 +33,7 @@ function getColorClass(score: number | null | undefined): string {
 const Canvas: React.FC = () => {
   // 1) Get current user to pass to our Convex query
   const { user } = useUser();
-  const userId = user?.userId || "";
+  const userId = user ? user._id.toString() : "";
 
   // 2) We’ll assume we’re showing year 2025
   const year = "2025";

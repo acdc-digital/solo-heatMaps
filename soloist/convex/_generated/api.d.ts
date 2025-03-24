@@ -16,6 +16,7 @@ import type {
 import type * as auth from "../auth.js";
 import type * as dailyLogs from "../dailyLogs.js";
 import type * as http from "../http.js";
+import type * as score from "../score.js";
 import type * as users from "../users.js";
 
 /**
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   dailyLogs: typeof dailyLogs;
   http: typeof http;
+  score: typeof score;
   users: typeof users;
 }>;
 export declare const api: FilterApi<
